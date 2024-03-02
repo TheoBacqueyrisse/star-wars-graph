@@ -1,0 +1,259 @@
+---
+title: "Graph Project"
+output: html_document
+date: "2024-02-22"
+---
+
+```{r}
+#install.packages("jsonlite")
+#install.packages("igraph")
+```
+```{r}
+library(jsonlite)
+library(igraph)
+```
+
+
+```{r}
+SW_1<- fromJSON("ep1_complete.json")
+SW_2<- fromJSON("ep2_complete.json")
+SW_3<- fromJSON("ep3_complete.json")
+SW_4<- fromJSON("ep4_complete.json")
+SW_5<- fromJSON("ep5_complete.json")
+SW_6<- fromJSON("ep6_complete.json")
+SW_7<- fromJSON("ep7_complete.json")
+
+prev_1<- fromJSON("starwars-episode-1-interactions-allCharacters.json")
+prev_2<- fromJSON("starwars-episode-2-interactions-allCharacters.json")
+prev_3<- fromJSON("starwars-episode-3-interactions-allCharacters.json")
+prev_4<- fromJSON("starwars-episode-4-interactions-allCharacters.json")
+prev_5<- fromJSON("starwars-episode-5-interactions-allCharacters.json")
+prev_6<- fromJSON("starwars-episode-6-interactions-allCharacters.json")
+prev_7<- fromJSON("starwars-episode-7-interactions-allCharacters.json")
+
+
+```
+
+
+
+```{r}
+df_ep1 <- data.frame()
+for(i in names(SW_1)){
+  temp <- as.data.frame(SW_1[[i]])
+  df_ep1 <- rbind(df_ep1, temp)
+  
+}
+
+df_ep2 <- data.frame()
+for(i in names(SW_2)){
+  temp <- as.data.frame(SW_2[[i]])
+  df_ep2 <- rbind(df_ep2, temp)
+  
+}
+
+df_ep3 <- data.frame()
+for(i in names(SW_3)){
+  temp <- as.data.frame(SW_3[[i]])
+  df_ep3 <- rbind(df_ep3, temp)
+  
+}
+
+df_ep4 <- data.frame()
+for(i in names(SW_4)){
+  temp <- as.data.frame(SW_4[[i]])
+  df_ep4 <- rbind(df_ep4, temp)
+  
+}
+
+df_ep5 <- data.frame()
+for(i in names(SW_5)){
+  temp <- as.data.frame(SW_5[[i]])
+  df_ep5 <- rbind(df_ep5, temp)
+  
+}
+
+df_ep6 <- data.frame()
+for(i in names(SW_6)){
+  temp <- as.data.frame(SW_6[[i]])
+  df_ep6 <- rbind(df_ep6, temp)
+  
+}
+
+df_ep7 <- data.frame()
+for(i in names(SW_7)){
+  temp <- as.data.frame(SW_7[[i]])
+  df_ep7 <- rbind(df_ep7, temp)
+  
+}
+
+
+df_ep1$episode = 1
+df_ep2$episode = 2
+df_ep3$episode = 3
+df_ep4$episode = 4
+df_ep5$episode = 5
+df_ep6$episode = 6
+df_ep7$episode = 7
+
+df_full <- rbind(df_ep1,df_ep2,df_ep3,df_ep4,df_ep5,df_ep6,df_ep7)
+
+```
+
+
+
+
+```{r}
+all_episodes <- data.frame()
+episodes = list(prev_1,prev_2,prev_3,prev_4,prev_5,prev_6,prev_7)
+n = 0
+names_colors <- data.frame(name = character(), colour = character(), stringsAsFactors = FALSE)
+
+# Loop through episodes 1 to 7
+for (episode in episodes) {
+  n=n+1
+
+  # Extract nodes and links data frames for the current episode
+  nodes_df <- as.data.frame(episode$nodes)
+  links_df <- as.data.frame(episode$links)
+
+  # Create a mapping between index and name in the nodes data frame
+  index_to_name <- setNames(nodes_df$name, seq_len(nrow(nodes_df)))
+
+  # Add source and target names to links data frame
+  links_df$source_name <- index_to_name[links_df$source + 1]
+  links_df$target_name <- index_to_name[links_df$target + 1]
+
+  #Change the order of the columns
+  links_df <- links_df[, c("source_name", "target_name", names(links_df)[1:(ncol(links_df)-2)])]
+
+  #Add the 'episode' variable
+  links_df$episode <- n
+  
+  #Concatenate the datasets
+  all_episodes <- rbind(all_episodes,links_df )
+  
+  names_colors <- rbind(names_colors, nodes_df[, c("name", "colour")])
+  names_colors <- names_colors[!duplicated(names_colors[c("name", "colour")]), ]
+  
+}
+
+all_episodes
+```
+
+
+```{r}
+#Define the list of the names
+unique_vertices <- unique(c(all_episodes$source_name, all_episodes$target_name))
+
+# Create a directed graph object
+g <- graph_from_data_frame(d = all_episodes, directed = TRUE, vertices = unique_vertices)
+
+```
+
+
+```{r, fig.height = 10, fig.width = 10}
+plot(g, layout = layout.fruchterman.reingold, vertex.color = names_colors$colour)
+```
+```{r}
+
+unique_vertices1 <- unique(c(subset(all_episodes, episode == 1)$source_name, subset(all_episodes, episode == 1)$target_name))
+unique_vertices2 <- unique(c(subset(all_episodes, episode == 2)$source_name, subset(all_episodes, episode == 2)$target_name))
+unique_vertices3 <- unique(c(subset(all_episodes, episode == 3)$source_name, subset(all_episodes, episode == 3)$target_name))
+unique_vertices4 <- unique(c(subset(all_episodes, episode == 4)$source_name, subset(all_episodes, episode == 4)$target_name))
+unique_vertices5 <- unique(c(subset(all_episodes, episode == 5)$source_name, subset(all_episodes, episode == 5)$target_name))
+unique_vertices6 <- unique(c(subset(all_episodes, episode == 6)$source_name, subset(all_episodes, episode == 6)$target_name))
+unique_vertices7 <- unique(c(subset(all_episodes, episode == 7)$source_name, subset(all_episodes, episode == 7)$target_name))
+
+
+g1 <- graph_from_data_frame(d = subset(all_episodes, episode == 1), directed = TRUE, vertices = unique_vertices1)
+g2 <- graph_from_data_frame(d = subset(all_episodes, episode == 2), directed = TRUE, vertices = unique_vertices2)
+g3 <- graph_from_data_frame(d = subset(all_episodes, episode == 3), directed = TRUE, vertices = unique_vertices3)
+g4 <- graph_from_data_frame(d = subset(all_episodes, episode == 4), directed = TRUE, vertices = unique_vertices4)
+g5 <- graph_from_data_frame(d = subset(all_episodes, episode == 5), directed = TRUE, vertices = unique_vertices5)
+g6 <- graph_from_data_frame(d = subset(all_episodes, episode == 6), directed = TRUE, vertices = unique_vertices6)
+g7 <- graph_from_data_frame(d = subset(all_episodes, episode == 7), directed = TRUE, vertices = unique_vertices7)
+
+
+
+```
+
+
+```{r, fig.height = 10, fig.width = 10}
+plot(g1, layout = layout.fruchterman.reingold, vertex.color = names_colors$colour)
+plot(g2, layout = layout.fruchterman.reingold, vertex.color = names_colors$colour)
+plot(g3, layout = layout.fruchterman.reingold, vertex.color = names_colors$colour)
+plot(g4, layout = layout.fruchterman.reingold, vertex.color = names_colors$colour)
+plot(g5, layout = layout.fruchterman.reingold, vertex.color = names_colors$colour)
+plot(g6, layout = layout.fruchterman.reingold, vertex.color = names_colors$colour)
+plot(g7, layout = layout.fruchterman.reingold, vertex.color = names_colors$colour)
+
+```
+
+
+
+
+
+
+
+# Graph Analysis Project: Study of a network formation mechanism 
+
+
+## 1.	Problem Statement
+
+*Describe the network you are studying. What mechanism are you interested in and why is it interesting or relevant to study it in this network? (max 200 words)*
+
+The network under study is a directed graph representing character interactions across the seven Star Wars episodes. Nodes correspond to characters, and edges are weighted by the frequency of mentions from a source character ("source") to a target character ("target"). Two crucial attributes, "Origin" denoting characters' planets of origin and "Side" indicating their alignment with the light or dark side of the Force, provide additional context.
+
+The mechanism of interest is the flow of information within this network, driven by character mentions. By analyzing the directed edges and their weights, we aim to uncover key influencers, central characters, and patterns of communication. Understanding information flow is pertinent for revealing pivotal characters who shape the narrative, assessing the impact of character alliances or conflicts, and deciphering how the light and dark sides contribute to the overall dynamics. This investigation not only enhances our comprehension of character relationships but also sheds light on the narrative structure, character development, and thematic elements within the Star Wars universe.
+
+## 2. Expectations
+*Formulate expectations about the causes and consequences of this mechanism. Why do you expect this mechanism to occur? What network characteristics do you expect as a result from this mechanism? (max 300 words)*
+
+
+
+## 3.	Research design
+*Explain how to define a CUG test to find evidence for the mechanism you are studying in any given graph. Clearly specify the reference model you chose and define your test statistic with equations. (max 300 words)*
+
+```{r}
+
+```
+
+
+*Explain how to define a QAP test to find evidence for the mechanism you are studying in any given graph. Clearly define all your statistical variables with equations. (max 300 words)*
+
+
+
+## 4. Data Collection
+*Describe your data. Which real network did you select, how did you collect and store the data? Provide a graph visualization and three descriptive measures of the network that are useful for your analyses. (max 300 words)*
+
+
+## 5. Exploration and analysis
+
+*Try identifying communities in your graph, using the algorithm of your choice. Explain your choice, describe the communities you found and provide a graph visualization of the communities. (max 300 words)*
+
+```{r}
+
+```
+
+
+*Does the distribution of individuals in the communities match your expectations regarding the mechanism you are studying? You can choose the statistic and/or visualization that best shows this. (300 words) *
+
+
+
+*Perform the CUG test and the QAP test previously described. Report all test statistics and empirical p-values. (max 300 words)*
+
+
+## 6.	Interpretation and conclusions
+
+*Summarize what we learn from your community detection and statistical tests. Are they all in line with your expectations? (max 300 words)*
+
+
+
+*Discuss the potential value of performing a Multiple QAP regression in your case (without doing it). (max 200 words)*
+
+
+
+*Discuss the limitations of this study and identify possible ways to improve or enrich your study. Could this type of analysis be used to provide insight into or answer answering real-life problems? (max 200 words)*
+
+
+
